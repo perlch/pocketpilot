@@ -1,4 +1,4 @@
-# на русском языке:
+документация на русском языке:
 https://github.com/perlch/pocketpilot/blob/main/README_ru.md
 
 README
