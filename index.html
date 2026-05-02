@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Settings UI</title>
+        <style>
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 20px 16px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+         
+            background: linear-gradient(270deg, #f2f2f7, #cbdcff, #007aff, #b3d1ff);
+            background-size: 600% 600%;
+            animation: oceanWaves 20s ease-in-out infinite;
+        }
+
+        @keyframes oceanWaves {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        p {
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.4;
+            color: #000;
+        }
+
+        .section-title {
+            font-size: 13px;
+            color: #1c1c1e;
+            text-transform: uppercase;
+            margin: 0 0 8px 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background-color: rgba(209, 209, 214, 0.4);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+
+        .btn {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 14px 16px;
+            text-decoration: none;
+            font-size: 17px;
+            color: #007aff;
+            transition: all 0.3s ease;
+        }
+
+        .btn:active {
+            background-color: rgba(229, 229, 234, 0.9);
+            transform: scale(0.96);
+        }
+
+        .chevron::after {
+            content: "›";
+            color: #c4c4c6;
+            font-size: 20px;
+            margin-left: 8px;
+            font-weight: 300;
+        }
+
+        .btn-text {
+            display: flex;
+            width: 100%;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+
+</head>
+<body>
+
+    <div class="container">
+        <div class="card">
+            <p>Developing mobile applications directly using web tools and Apache Cordova is a powerful new leap for the mobile app market, ranging from games to productivity tools. <br> <br> :D</p>
+        </div>
+
+        <div class="section-title">Source Code</div>
+        <div class="button-group">
+            <a href="https://github.com/perlch/pocketpilot" class="btn">
+                <div class="btn-text">Check the GitHub of the project <span class="chevron"></span></div>
+            </a>
+        </div>
+
+        <div class="section-title">Portfolio</div>
+        <div class="button-group">
+            <a href="https://perlch.github.io" class="btn">
+                <div class="btn-text">Check my other projects <span class="chevron"></span></div>
+            </a>
+        </div>
+
+        <div class="section-title">Actions</div>
+        <div class="button-group">
+            <a href="app.apk" class="btn">
+                <div class="btn-text">Download APK <span class="chevron"></span></div>
+            </a>
+            <a href="result.html" class="btn">
+                <div class="btn-text">Test Online <span class="chevron"></span></div>
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>
