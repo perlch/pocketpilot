@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>System Monitor</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f7;
+            --glass: rgba(255, 255, 255, 0.7);
+            --border: rgba(255, 255, 255, 0.3);
+            --text-main: #1d1d1f;
+            --text-secondary: #86868b;
+            --accent: #007aff;
+            --card-shadow: 0 8px 30px rgba(0,0,0,0.04);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #000000;
+            --glass: rgba(28, 28, 30, 0.8);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f5f5f7;
+            --text-secondary: #a1a1a6;
+            --card-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, system-ui, sans-serif; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-main);
+            padding: 20px;
+            padding-top: env(safe-area-inset-top);
+            min-height: 100vh;
+        }
+
+        #br-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; pointer-events: none; z-index: 10000; opacity: 0;
+        }
+
+        .container { max-width: 500px; margin: 0 auto; }
+
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin: 20px 0 30px;
+        }
+
+        h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+
+        .toggle-box {
+            width: 51px; height: 31px; background: #e9e9eb; border-radius: 16px;
+            position: relative; cursor: pointer; border: none;
+        }
+        [data-theme="dark"] .toggle-box { background: #34c759; }
+        .toggle-box::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px;
+            background: white; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            transition: 0.2s;
+        }
+        [data-theme="dark"] .toggle-box::after { transform: translateX(20px); }
+
+        #toggle-box {
+            width: 51px; height: 31px; background: #e9e9eb; border-radius: 16px;
+            position: relative; cursor: pointer; border: none;
+        }
+        [data-theme="dark"] #toggle-box { background: #34c759; }
+        #toggle-box::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px;
+            background: white; border-radius: 50%; box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+            transition: 0.2s;
+        }
+        [data-lang="ru"] #toggle-box::after { transform: translateX(20px); }
+
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border-radius: 22px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: var(--card-shadow);
+            opacity: 0;
+            transform: translateY(30px);
+            animation: appear 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+        }
+
+        @keyframes appear { to { opacity: 1; transform: translateY(0); } }
+
+        .card-title { font-size: 13px; font-weight: 600; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 15px; }
+
+        .row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 0.5px solid rgba(128,128,128,0.1); }
+        .row:last-child { border-bottom: none; }
+
+        .label { font-size: 16px; color: var(--text-main); }
+        .value { font-size: 16px; font-weight: 500; color: var(--accent); }
+
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 8px; background: rgba(128,128,128,0.2); border-radius: 4px; outline: none; margin: 15px 0;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 28px; height: 28px; background: white; border-radius: 50%; box-shadow: 0 3px 10px rgba(0,0,0,0.2); cursor: pointer;
+        }
+
+        .btn {
+            background: var(--accent); color: white; border: none; padding: 12px 20px;
+            border-radius: 14px; font-size: 15px; font-weight: 600; width: 100%; cursor: pointer; margin-top: 10px;
+        }
+        .btn:active { transform: scale(0.97); opacity: 0.8; }
+    </style>
+
+</head>
+<body data-theme="light">
+
+<div id="br-overlay"></div>
+
+<div class="container">
+    <header>
+        <h1>Система</h1>
+        <button class="toggle-box" onclick="toggleTheme()"></button>
+        <h1>Язык</h1>
+        <button id="toggle-box" onclick="toggleLanguage()"></button>
+    </header>
+
+
+    <div class="card" style="animation-delay: 0.2s">
+        <div class="card-title">Ресурсы устройства</div>
+        <div class="row">
+            <span class="label">Использовано RAM</span>
+            <span class="value" id="mem-used">...</span>
+        </div>
+        <div class="row">
+            <span class="label">Доступно RAM</span>
+            <span class="value" id="mem-total">...</span>
+        </div>
+        <div class="row">
+            <span class="label">Процессор (ядра)</span>
+            <span class="value" id="cpu-cores">...</span>
+        </div>
+    </div>
+
+ 
+    <div class="card" style="animation-delay: 0.3s">
+        <div class="card-title">Связь</div>
+        <div class="row">
+            <span class="label">Тип соединения</span>
+            <span class="value" id="net-type">...</span>
+        </div>
+        <div class="row">
+            <span class="label">Статус сети</span>
+            <span class="value" id="net-status">...</span>
+        </div>
+        <div class="row">
+            <span class="label">Примерная задержка</span>
+            <span class="value" id="net-rtt">...</span>
+        </div>
+        <div class="row">
+            <span class="label">Тест пинга</span>
+            <span class="value" id="ping-val">--- мс</span>
+        </div>
+        <button class="btn" onclick="testPing()">Запустить тест пинга</button>
+    </div>
+
+
+    <div class="card" style="animation-delay: 0.4s">
+        <div class="card-title">Аккумулятор</div>
+        <div class="row">
+            <span class="label">Заряд</span>
+            <span class="value" id="bat-level">...</span>
+        </div>
+        <div class="row">
+            <span class="label">Источник питания</span>
+            <span class="value" id="bat-source">...</span>
+        </div>
+    </div>
+
+
+    <div class="card" style="animation-delay: 0.5s">
+        <div class="card-title">Прочее</div>
+        <div class="row"><span class="label">Язык</span><span class="value" id="sys-lang">...</span></div>
+        <div class="row"><span class="label">Экран</span><span class="value" id="sys-orient">...</span></div>
+        <div class="row"><span class="label">Браузер</span><span class="value" id="sys-browser">...</span></div>
+        <div class="row"><span class="label">Устройство</span><span class="value" id="sys-device">...</span></div>
+    </div>
+
+    <div class="card" style="animation-delay: 0.5s">
+        <div class="card-title">Тесты 3D<span class="label">
+        
+        <!-- -->
+                    <div id="view" style="position:relative; width:100%; height:300px; background:#eee; perspective:800px; overflow:hidden; touch-action:none; user-select:none; font-family:sans-serif;">
+                <div id="gz" style="position:absolute; left:20px; bottom:20px; width:1px; height:1px; transform-style:preserve-3d;">
+                    <div style="position:absolute; width:40px; height:2px; background:red; transform-origin:left;"></div>
+                    <div style="position:absolute; width:40px; height:2px; background:green; transform:rotateZ(-90deg); transform-origin:left;"></div>
+                    <div style="position:absolute; width:40px; height:2px; background:blue; transform:rotateY(-90deg); transform-origin:left;"></div>
+                </div>
+
+                <div id="st" style="position:absolute; right:10px; top:10px; font-size:12px;">0° X, 0° Y</div>
+
+                <div id="cb" style="position:absolute; left:50%; top:50%; width:100px; height:100px; margin:-50px; transform-style:preserve-3d;">
+                    <style>
+                        .f { position:absolute; width:100px; height:100px; border:1px solid #000; background:rgba(255,255,255,0.8); display:flex; align-items:center; justify-content:center; }
+                    </style>
+                    <div class="f" style="transform:translateZ(50px)">FRONT</div>
+                    <div class="f" style="transform:rotateY(180deg) translateZ(50px)">BACK</div>
+                    <div class="f" style="transform:rotateY(90deg) translateZ(50px)">RIGHT</div>
+                    <div class="f" style="transform:rotateY(-90deg) translateZ(50px)">LEFT</div>
+                    <div class="f" style="transform:rotateX(90deg) translateZ(50px)">TOP</div>
+                    <div class="f" style="transform:rotateX(-90deg) translateZ(50px)">BOTTOM</div>
+                </div>
+            </div>
+        <!-- -->
+            </span>
+        </div>
+        <div class="card-title">Тест интернет-взаимодействия<span class="label">
+            <iframe src="https://perlch.github.io/matrix" style="width: 100%;"></iframe>
+        </span></div>
+    </div>
+</div>
+
+<script>
+
+    function toggleTheme() {
+        const b = document.body;
+        b.setAttribute('data-theme', b.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+    }
+
+    function setBrightness(v) {
+        document.getElementById('br-overlay').style.opacity = v / 100;
+    }
+
+    function toggleFS() {
+        if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+        else document.exitFullscreen();
+    }
+
+
+    async function testPing() {
+        const display = document.getElementById('ping-val');
+        display.textContent = 'Замер...';
+        const start = performance.now();
+        try {
+            await fetch('https://google.com', { mode: 'no-cors', cache: 'no-cache' });
+            display.textContent = Math.round(performance.now() - start) + ' мс';
+        } catch(e) { display.textContent = 'Ошибка'; }
+    }
+
+    function updateNetwork() {
+        const conn = navigator.connection || {};
+        document.getElementById('net-status').textContent = navigator.onLine ? 'В сети' : 'Offline';
+        document.getElementById('net-rtt').textContent = (conn.rtt || 0) + ' ms';
+        document.getElementById('net-type').textContent = conn.effectiveType || 'Неизвестно';
+    }
+
+    function updateHardware() {
+        if (window.performance && performance.memory) {
+            const used = (performance.memory.usedJSHeapSize / 1048576).toFixed(1);
+            const total = (performance.memory.jsHeapSizeLimit / 1048576).toFixed(0);
+            document.getElementById('mem-used').textContent = used + ' MB';
+            document.getElementById('mem-total').textContent = total + ' MB';
+        } else {
+            document.getElementById('mem-used').textContent = 'N/A';
+            document.getElementById('mem-total').textContent = 'Hidden';
+        }
+        document.getElementById('cpu-cores').textContent = navigator.hardwareConcurrency || 'n/a';
+    }
+
+    async function updateBattery() {
+        if ('getBattery' in navigator) {
+            const b = await navigator.getBattery();
+            const refresh = () => {
+                document.getElementById('bat-level').textContent = Math.round(b.level * 100) + '%';
+                document.getElementById('bat-source').textContent = b.charging ? 'Адаптер' : 'Батарея';
+            };
+            refresh();
+            b.onlevelchange = refresh; b.onchargingchange = refresh;
+        }
+    }
+
+   
+    function updateStats() {
+    document.getElementById('sys-lang').textContent = navigator.language.toUpperCase();
+    document.getElementById('sys-orient').textContent = screen.orientation.type.split('-')[0];
+
+    // Браузер
+    const ua = navigator.userAgent;
+    let browser = "Неизвестно";
+
+    if (ua.includes("Chrome")) browser = "Chrome";
+    else if (ua.includes("Safari")) browser = "Safari";
+    else if (ua.includes("Firefox")) browser = "Firefox";
+    else if (ua.includes("Edg")) browser = "Edge";
+
+    document.getElementById('sys-browser').textContent = browser;
+
+   
+    let device = "Desktop";
+    if (/Mobi|Android/i.test(ua)) device = "Mobile";
+    if (/Tablet|iPad/i.test(ua)) device = "Tablet";
+
+    document.getElementById('sys-device').textContent = device;
+    }
+
+
+
+    const dictionary = {
+        "Адаптер":"Adapter",
+        "Батарея":"Battery",
+        "Система": "System",
+        "Язык": "Language",
+        "Ресурсы устройства": "Resources",
+        "Использовано": "Used",
+        "Доступно": "Available",
+        "Процессор (ядра)": "Processor (cores)",
+        "Связь": "Connectivity",
+        "Тип соединения": "Connection type",
+        "Статус сети": "Network status",
+        "Примерная задержка": "Approximate delay",
+        "Тест пинга": "Ping test",
+        "Запустить тест пинга": "Run ping test",
+        "Аккумулятор": "Battery",
+        "Заряд": "Level",
+        "Источник питания": "Power source",
+        "Прочее": "Other",
+        "Язык": "Language",
+        "Экран": "Screen",
+        "Браузер": "Browser",
+        "Устройство": "Device",
+        "мс":"ms",
+        "Тесты 3D":"3D tests",
+        "Тест интернет-взаимодействия": "Internet interaction test",
+        "Неизвестно":"Unknown"
+    };
+
+
+    let isEnglish = false;
+
+    function toggleLanguage() {
+        const b = document.body;
+        const currentLang = b.getAttribute('data-lang') === 'ru' ? 'en' : 'ru';
+        b.setAttribute('data-lang', currentLang);
+        isEnglish = !isEnglish;
+        
+        const btn = document.getElementById('langBtn');
+        if (btn) btn.innerText = isEnglish ? "Вернуть RU" : "Перевести на EN";
+
+
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        let node;
+
+        while (node = walker.nextNode()) {
+            let text = node.nodeValue;
+
+            for (const [ru, en] of Object.entries(dictionary)) {
+                if (isEnglish) {
+      
+                    const regex = new RegExp(ru, 'g');
+                    text = text.replace(regex, en);
+                } else {
+                
+                    const regex = new RegExp(en, 'g');
+                    text = text.replace(regex, ru);
+                }
+            }
+            node.nodeValue = text;
+        }
+    }
+
+
+
+
+
+    window.addEventListener('online', updateNetwork);
+    window.addEventListener('offline', updateNetwork);
+    
+    updateNetwork();
+    updateHardware();
+    updateBattery();
+    updateStats();
+  
+    setInterval(updateHardware, 3000);
+</script>
+
+<script>
+
+    (function() {
+        const cb = document.getElementById('cb'), gz = document.getElementById('gz'), 
+              st = document.getElementById('st'), vw = document.getElementById('view');
+        let x, y, sx, sy, rx = Math.random()*360, ry = Math.random()*360, ix = rx, iy = ry;
+
+        const up = () => {
+            cb.style.transform = `rotateX(${-ry}deg) rotateY(${rx}deg)`;
+            gz.style.transform = `rotateX(${-ry}deg) rotateY(${rx}deg)`;
+            st.innerText = `${Math.round(rx-ix)}° Y, ${Math.round(ry-iy)}° X`;
+        };
+
+        const move = e => {
+            const t = e.touches ? e.touches[0] : e;
+            rx += (t.clientX - sx) * 0.5;
+            ry += (t.clientY - sy) * 0.5;
+            sx = t.clientX; sy = t.clientY;
+            up();
+        };
+
+        const stop = () => {
+            window.removeEventListener('mousemove', move);
+            window.removeEventListener('touchmove', move);
+        };
+
+        const start = e => {
+            const t = e.touches ? e.touches[0] : e;
+            sx = t.clientX; sy = t.clientY;
+            window.addEventListener(e.type === 'touchstart' ? 'touchmove' : 'mousemove', move);
+            window.addEventListener(e.type === 'touchstart' ? 'touchend' : 'mouseup', stop);
+        };
+
+        vw.addEventListener('mousedown', start);
+        vw.addEventListener('touchstart', start);
+        up();
+    })();
+</script>
+
+</body>
+  </html>
+  
